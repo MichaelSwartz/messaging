@@ -1,1 +1,35 @@
 /* CSS declarations go here */
+
+body {
+  font-family: sans-serif;
+  font-size: 100%;
+  color: white;
+  background-color: darkblue;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  min-height: 100%;
+}
+
+li {
+  position: relative;
+  list-style: none;
+  padding: 10px;
+}
+
+.new-message input {
+  padding: 10px;
+  width: 100%;
+  font-size: 1em;
+}
+
+.delete {
+  float: right;
+  font-weight: bold;
+  background: none;
+  font-size: 1em;
+  border: none;
+  position: relative;
+}

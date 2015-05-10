@@ -3,12 +3,27 @@
 </head>
 
 <body>
-  <h1>Messages</h1>
+  <div class="container">
+    <header>
+      <h1>Messages</h1>
 
-  {{> hello}}
+      <form class="new-message">
+        <input type="text" name="text" placeholder="Click here to type!" />
+      </form>
+    </header>
+
+    <ul>
+      {{#each messages}}
+        {{> message}}
+      {{/each}}
+    </ul>
+  </div>
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="message">
+  <li class="{{#if read}}read{{/if}}">
+    <button class="delete">&times;</button>
+
+    <span class="text">{{text}}</span>
+  </li>
 </template>
