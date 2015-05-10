@@ -13,7 +13,9 @@ if (Meteor.isClient) {
 
       Messages.insert({
         text: text,
-        createdAt: new Date()
+        createdAt: new Date(),
+        author: Meteor.userId(),
+        username: Meteor.user().username || Meteor.user().profile.name
       });
 
       event.target.text.value = "";
@@ -29,6 +31,10 @@ if (Meteor.isClient) {
     "click .delete": function () {
       Messages.remove(this._id);
     }
+  });
+
+  Accounts.ui.config({
+    passwordSignupFields: "USERNAME_ONLY"
   });
 }
 

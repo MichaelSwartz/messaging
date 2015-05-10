@@ -4,24 +4,30 @@
 
 <body>
   <div class="container">
+    {{> loginButtons}}
+
     <header>
       <h1>Messages</h1>
 
-      <form class="new-message">
-        <input type="text" name="text" placeholder="Click here to type!" />
-      </form>
+      {{#if currentUser}}
+        <form class="new-message">
+          <input type="text" name="text" placeholder="Click here to type!" />
+        </form>
+      {{else}}
+        Sign in to write messages
+      {{/if}}
     </header>
 
     <ul>
       {{#each messages}}
-        {{> message}}
+        <span class="text"><strong>{{username}}</strong>{{> message}}</span>
       {{/each}}
     </ul>
   </div>
 </body>
 
 <template name="message">
-  <li class="{{#if read}}read{{/if}}">
+  <li>
     <button class="delete">&times;</button>
 
     <span class="text">{{text}}</span>
