@@ -1,7 +1,9 @@
 Messages = new Mongo.Collection("messages");
+Chats = new Mongo.Collection("chats");
 
 if (Meteor.isClient) {
   Meteor.subscribe("messages");
+  Meteor.subscribe("chats");
 
   Template.message.helpers({
     isAuthor: function () {
@@ -9,20 +11,37 @@ if (Meteor.isClient) {
     }
   });
 
+  // Template.chats.helpers({
+  //   selectedChat: function () {
+  //     var chat = Chats.findOne(Session.get("selectedChat"));
+  //     return chat && chat.name;
+  //   }
+  // });
+
   Template.body.helpers({
     messages: function () {
       return Messages.find({}, {sort: {createdAt: -1}});
+    },
+
+    chats: function () {
+      return Chats.find({}, {sort: {createdAt: -1}});
     }
   });
 
   Template.body.events({
     "submit .new-message": function (event) {
       var text = event.target.text.value;
-
       Meteor.call("addMessage", text);
 
       event.target.text.value = "";
+      return false;
+    },
 
+    "submit .new-chat": function (event) {
+      var name = event.target.text.value;
+      Meteor.call("addChat", name);
+
+      event.target.text.value = "";
       return false;
     }
   });
@@ -44,14 +63,25 @@ if (Meteor.isServer) {
       // check(chatId, String);
       return Messages.find();
     });
-
-    // Meteor.publish('chats', function() {
-    //     return Chats.find();
-    // });
+    Meteor.publish("chats", function() {
+      return Chats.find();
+    });
   });
 }
 
 Meteor.methods({
+  addChat: function (name) {
+    if (! Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Chats.insert({
+      name: name,
+      createdAt: new Date (),
+      owner: Meteor.userId(),
+    });
+  },
+
   addMessage: function (text) {
     if (! Meteor.userId()) {
       throw new Meteor.Error("not-authorized");
