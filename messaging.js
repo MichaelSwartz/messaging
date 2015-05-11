@@ -1,12 +1,5 @@
 Messages = new Mongo.Collection("messages");
 
-Messages.allow({
-  remove: function (userId, message) {
-    return message.author === userId;
-  },
-  fetch: ['author']
-});
-
 if (Meteor.isClient) {
   Meteor.subscribe("messages");
 
@@ -52,15 +45,15 @@ if (Meteor.isServer) {
       return Messages.find();
     });
 
-    Meteor.publish('chats', function() {
-        return Chats.find();
-    });
+    // Meteor.publish('chats', function() {
+    //     return Chats.find();
+    // });
   });
 }
 
 Meteor.methods({
   addMessage: function (text) {
-    if (! currentUser) {
+    if (! Meteor.userId()) {
       throw new Meteor.Error("not-authorized");
     }
 
