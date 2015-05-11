@@ -48,7 +48,12 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     Meteor.publish("messages", function () {
+      // check(chatId, String);
       return Messages.find();
+    });
+
+    Meteor.publish('chats', function() {
+        return Chats.find();
     });
   });
 }
