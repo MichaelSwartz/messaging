@@ -1,14 +1,22 @@
 Messages = new Mongo.Collection("messages");
 
-Messages.allow({
-  remove: function (userId, message) {
-    return message.author === userId;
-  },
-  fetch: ['author']
-});
+// Messages.allow({
+//   remove: function (userId, message) {
+//     return message.author === userId;
+//   },
+//   fetch: ['author']
+// });
 
 if (Meteor.isClient) {
   Meteor.subscribe("messages");
+  // Meteor.subscribe("chats");
+
+  // Template.chats.helpers({
+  //   selectedChat: function () {
+  //     var chat = Chats.findOne(Session.get("selectedChat"));
+  //     return chat && chat.name;
+  //   }
+  // });
 
   Template.message.helpers({
     isAuthor: function () {
@@ -49,12 +57,13 @@ if (Meteor.isServer) {
   Meteor.startup(function () {
     Meteor.publish("messages", function () {
       // check(chatId, String);
-      return Messages.find();
+      return Messages.find({});
+      // chatId: chatId});
     });
-
-    Meteor.publish('chats', function() {
-        return Chats.find();
-    });
+    //
+    // Meteor.publish('chats', function() {
+    //     return Chats.find();
+    // });
   });
 }
 
@@ -74,6 +83,8 @@ Meteor.methods({
 
   deleteMessage: function (messageId) {
     var message = Messages.findOne(messageId);
+    console.log(message.author);
+    console.log(Meteor.userId());
     if (message.author !== Meteor.userId()) {
       throw new Meteor.Error("not-authorized");
     }
