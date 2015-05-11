@@ -1,6 +1,21 @@
 Messages = new Mongo.Collection("messages");
 
+Messages.allow({
+  remove: function (userId, message) {
+    return message.author === userId;
+  },
+  fetch: ['author']
+});
+
 if (Meteor.isClient) {
+  Meteor.subscribe("messages");
+
+  Template.message.helpers({
+    isAuthor: function () {
+      return this.author === Meteor.userId();
+    }
+  });
+
   Template.body.helpers({
     messages: function () {
       return Messages.find({}, {sort: {createdAt: -1}});
@@ -11,12 +26,7 @@ if (Meteor.isClient) {
     "submit .new-message": function (event) {
       var text = event.target.text.value;
 
-      Messages.insert({
-        text: text,
-        createdAt: new Date(),
-        author: Meteor.userId(),
-        username: Meteor.user().username || Meteor.user().profile.name
-      });
+      Meteor.call("addMessage", text);
 
       event.target.text.value = "";
 
@@ -25,11 +35,8 @@ if (Meteor.isClient) {
   });
 
   Template.message.events({
-    // "click .toggle-read": function () {
-    //   Messages.update(this._id, {$set: {read: ! this.read}});
-    // },
     "click .delete": function () {
-      Messages.remove(this._id);
+      Meteor.call("deleteMessage", this._id);
     }
   });
 
@@ -40,6 +47,32 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   Meteor.startup(function () {
-    // code to run on server at startup
+    Meteor.publish("messages", function () {
+      return Messages.find();
+    });
   });
 }
+
+Meteor.methods({
+  addMessage: function (text) {
+    if (! currentUser) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Messages.insert({
+      text: text,
+      createdAt: new Date(),
+      author: Meteor.userId(),
+      username: Meteor.user().username || Meteor.user().profile.name
+    });
+  },
+
+  deleteMessage: function (messageId) {
+    var message = Messages.findOne(messageId);
+    if (message.author !== Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Messages.remove(messageId);
+  }
+});
