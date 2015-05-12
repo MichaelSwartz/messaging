@@ -14,6 +14,12 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.registerHelper('fromNow', function(date) {
+    if (date) {
+      return moment(date).fromNow();
+    }
+  });
+
   Template.chatList.helpers({
     selectedChat: function () {
       selectedChat = Chats.findOne(Session.get("selectedChat"));

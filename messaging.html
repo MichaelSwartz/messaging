@@ -33,7 +33,11 @@
 
       <ul>
         {{#each messages}}
-          <span class="text"><strong>{{username}}</strong>{{> message}}</span>
+          <span class="text">
+            <strong>{{username}}</strong> -
+            {{fromNow createdAt}}
+            {{> message}}
+          </span>
         {{/each}}
       </ul>
     </div>
