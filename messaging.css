@@ -19,7 +19,7 @@ li {
   padding: 10px;
 }
 
-.new-message input {
+.form input {
   padding: 10px;
   width: 100%;
   font-size: 1em;
@@ -32,4 +32,12 @@ li {
   font-size: 1em;
   border: none;
   position: relative;
+}
+
+.chat.selected {
+  background-color: pink;
+}
+
+.chat:hover {
+  background-color: red;
 }
