@@ -26,7 +26,9 @@
           <input type="text" name="text" placeholder="Click here to type messages!" />
         </form>
       {{else}}
-        Sign in to create chats and write messages
+        <div class="note">
+          Sign in to create chats and write messages
+        </div>
       {{/if}}
 
       <ul>
@@ -41,11 +43,30 @@
 <template name="message">
   <li>
     <button class="delete">&times;</button>
+    {{chat}}
 
     <span class="text">{{text}}</span>
   </li>
 </template>
 
 <template name="chat">
-  <li>{{name}}</li>
+  <li class="chat {{selected}}">
+    <span>{{name}}</span>
+  </li>
+</template>
+
+<template name="chatList">
+  <ul class="chatList">
+    {{#each chats}}
+      <li>
+        {{> chat}}
+      </li>
+    {{/each}}
+  </ul>
+
+  {{#if selectedChat}}
+    <div class="name">{{selectedChat}}</div>
+  {{else}}
+    <div class="note">Click a player to select</div>
+  {{/if}}
 </template>

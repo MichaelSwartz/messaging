@@ -33,3 +33,11 @@ li {
   border: none;
   position: relative;
 }
+
+.chat.selected {
+  background-color: pink;
+}
+
+.chat:hover {
+  background-color: red;
+}
