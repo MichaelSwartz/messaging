@@ -3,7 +3,7 @@ Chats = new Mongo.Collection("chats");
 
 if (Meteor.isClient) {
   Tracker.autorun(function () {
-    Meteor.subscribe("messages"); // {chat: Session.get("selectedChat")}
+    Meteor.subscribe("messages", {chat: Session.get("selectedChat")});
   });
 
   Meteor.subscribe("chats");
@@ -43,7 +43,6 @@ if (Meteor.isClient) {
       Session.set("selectedChat", chat);
       var user = Meteor.userId();
       Meteor.users.update({_id: user}, {$set: {'profile.selectedChat': chat}});
-      // SelectedChat = this._id;
     }
   });
 
@@ -87,24 +86,8 @@ if (Meteor.isServer) {
     Meteor.publish("messages", function () {
       var user = Meteor.users.findOne(this.userId);
       var selectedChat = user.profile.selectedChat;
-      // var selectedChat = Chats.findOne(Session.get("selectedChat"));
       return Messages.find({ chat: selectedChat });
     });
-
-      // check(chatId, String);
-      // if ( typeof SelectedChat !== 'undefined') {
-      //   console.log(SelectedChat);
-      //   return Messages.find({ chat: SelectedChat });
-      // } else {
-      //   return Messages.find();
-      // }
-      // if ( typeof Meteor.user().profile.iguana !== 'undefined' ) {
-      //   var selectedChat = Meteor.user().profile.selectedChat;
-      //   return Messages.find({ chat: selectedChat });
-      // } else {
-        // return Messages.find();
-      // }
-    // });
   });
 }
 
@@ -136,10 +119,10 @@ Meteor.methods({
   },
 
   deleteMessage: function (messageId) {
-    // var message = Messages.findOne(messageId);
-    // if (message.author !== Meteor.userId()) {
-    //   throw new Meteor.Error("not-authorized");
-    // }
+    var message = Messages.findOne(messageId);
+    if (message.author !== Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
 
     Messages.remove(messageId);
   }
