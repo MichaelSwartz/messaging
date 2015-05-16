@@ -11,7 +11,7 @@ li {
   padding: 10px;
 }
 
-.container {
+.container #outer {
   max-width: 500px;
   margin: 0 auto;
   min-height: 100%;

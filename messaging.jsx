@@ -1,135 +1,83 @@
-Messages = new Mongo.Collection("messages");
-Chats = new Mongo.Collection("chats");
+/**
+ * @jsx React.DOM
+ */
+
+var cx = React.addons.classSet;
+
+Messages = new Meteor.Collection("messages");
+Chats = new Meteor.Collection("chats");
+
+var Chatlist = ReactMeteor.createClass({
+  templateName: "Chatlist",
+
+  startMeteorSubscriptions: function() {
+    Meteor.subscribe("chats");
+  },
+
+  getMeteorState: function() {
+    var selectedChat = Chats.findOne(Session.get("selected_chat"));
+    return {
+      chats: Chats.find({}).fetch(),
+      selectedChat: selectedChat,
+      selectedName: selectedChat && selectedChat.name
+    };
+  },
+
+  selectChat: function(id) {
+    Session.set("selected_chat", id);
+  },
+
+  renderChat: function(model) {
+    var _id = this.state.selectedChat && this.state.selectedChat._id;
+
+    return <Chat
+      key={model._id}
+      name={model.name}
+      className={model._id === _id ? "selected" : ""}
+      onClick={this.selectChat.bind(this, model._id)}
+    />;
+  },
+
+  render: function() {
+    var children = [
+      <div className="chatlist">
+        { this.state.chats.map(this.renderChat) }
+      </div>
+    ];
+
+    if (this.state.selectedChat) {
+      children.push(
+        <div className="info">
+          <div className="name">{this.state.selectedName}</div>
+        </div>
+      );
+    } else {
+      children.push(
+        <div className="none">Select a chat</div>
+      );
+    }
+
+    return <div className="inner">{ children }</div>
+  }
+});
+
+var Chat = React.createClass({
+  render: function() {
+    var {name, ...rest } = this.props;
+    return <div {...rest} className={cx("chat", rest.className)}>
+      <span className="name">{name}</span>
+    </div>;
+  }
+});
 
 if (Meteor.isClient) {
-  Tracker.autorun(function () {
-    Meteor.subscribe("messages", {chat: Session.get("selectedChat")});
-  });
-
-  Meteor.subscribe("chats");
-
-  Template.message.helpers({
-    isAuthor: function () {
-      return this.author === Meteor.userId();
-    }
-  });
-
-  Template.registerHelper('fromNow', function(date) {
-    if (date) {
-      return moment(date).fromNow();
-    }
-  });
-
-  Template.chatList.helpers({
-    selectedChat: function () {
-      selectedChat = Chats.findOne(Session.get("selectedChat"));
-      return selectedChat && selectedChat.name;
-    }
-  });
-
-  Template.body.helpers({
-    messages: function () {
-      return Messages.find({}, {sort: {createdAt: -1}});
-    },
-
-    chats: function () {
-      return Chats.find({}, {sort: {createdAt: -1}});
-    }
-  });
-
-  Template.chat.helpers({
-    selected: function () {
-      return Session.equals("selectedChat", this._id) ? "selected" : '';
-    }
-  });
-
-  Template.chat.events({
-    'click': function () {
-      var chat = this._id;
-      Session.set("selectedChat", chat);
-      var user = Meteor.userId();
-      Meteor.users.update({_id: user}, {$set: {'profile.selectedChat': chat}});
-    }
-  });
-
-  Template.body.events({
-    "submit .new-message": function (event) {
-      var text = event.target.text.value;
-      var chat = Session.get("selectedChat");
-
-      Meteor.call("addMessage", text, chat);
-
-      event.target.text.value = "";
-      return false;
-    },
-
-    "submit .new-chat": function (event) {
-      var name = event.target.text.value;
-      Meteor.call("addChat", name);
-
-      event.target.text.value = "";
-      return false;
-    }
-  });
-
-  Template.message.events({
-    "click .delete": function () {
-      Meteor.call("deleteMessage", this._id);
-    }
-  });
-
   Accounts.ui.config({
     passwordSignupFields: "USERNAME_ONLY"
   });
 }
 
 if (Meteor.isServer) {
-  Meteor.startup(function () {
-    Meteor.publish("chats", function() {
-      return Chats.find();
-    });
-
-    Meteor.publish("messages", function () {
-      var user = Meteor.users.findOne(this.userId);
-      var selectedChat = user.profile.selectedChat;
-      return Messages.find({ chat: selectedChat });
-    });
+  Meteor.publish("chats", function() {
+    return Chats.find();
   });
 }
-
-Meteor.methods({
-  addChat: function (name) {
-    if (! Meteor.userId()) {
-      throw new Meteor.Error("not-authorized");
-    }
-
-    Chats.insert({
-      name: name,
-      createdAt: new Date (),
-      owner: Meteor.userId(),
-    });
-  },
-
-  addMessage: function (text, chat) {
-    if (! Meteor.userId()) {
-      throw new Meteor.Error("not-authorized");
-    }
-
-    Messages.insert({
-      text: text,
-      createdAt: new Date(),
-      author: Meteor.userId(),
-      username: Meteor.user().username || Meteor.user().profile.name,
-      chat: chat
-    });
-  },
-
-  deleteMessage: function (messageId) {
-    var message = Messages.findOne(messageId);
-    if (message.author !== Meteor.userId()) {
-      throw new Meteor.Error("not-authorized");
-    }
-
-    Messages.remove(messageId);
-  }
-});
