@@ -1,7 +1,3 @@
-/**
- * @jsx React.DOM
- */
-
 var cx = React.addons.classSet;
 
 Messages = new Meteor.Collection("messages");
@@ -17,14 +13,16 @@ var Chatlist = ReactMeteor.createClass({
   getMeteorState: function() {
     var selectedChat = Chats.findOne(Session.get("selected_chat"));
     return {
-      chats: Chats.find({}).fetch(),
+      chats: Chats.find({}, {sort: {name: 1}}).fetch(),
       selectedChat: selectedChat,
       selectedName: selectedChat && selectedChat.name
     };
   },
 
-  selectChat: function(id) {
-    Session.set("selected_chat", id);
+  selectChat: function(chat_id) {
+    Session.set("selected_chat", chat_id);
+    var user = Meteor.userId();
+    Meteor.users.update({_id: user}, {$set: {'profile.selectedChat': chat_id}});
   },
 
   renderChat: function(model) {
@@ -70,6 +68,47 @@ var Chat = React.createClass({
   }
 });
 
+var Messagelist = ReactMeteor.createClass({
+  templateName: "Messagelist",
+
+  startMeteorSubscriptions: function() {
+    Meteor.subscribe("messages");
+  },
+
+  getMeteorState: function() {
+    var selectedChat = Chats.findOne(Session.get("selected_chat"));
+    return {
+      messages: Messages.find({}, {sort: {createdAt: 1}}).fetch(),
+    };
+  },
+
+  renderMessage: function(model) {
+    return <Message
+      key={model._id}
+      text={model.text}
+    />;
+  },
+
+  render: function() {
+    var children = [
+      <div className="messagelist">
+        { this.state.messages.map(this.renderMessage) }
+      </div>
+    ];
+
+    return <div className="inner">{ children }</div>
+  }
+});
+
+var Message = React.createClass({
+  render: function() {
+    var {text, ...rest } = this.props;
+    return <div {...rest} className={cx("message", rest.className)}>
+      <span className="text">{text}</span>
+    </div>;
+  }
+});
+
 if (Meteor.isClient) {
   Accounts.ui.config({
     passwordSignupFields: "USERNAME_ONLY"
@@ -79,5 +118,12 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.publish("chats", function() {
     return Chats.find();
+  });
+
+  Meteor.publish("messages", function () {
+    //var user = Meteor.users.findOne(this.userId);
+    //var selectedChat = user.profile.selectedChat;
+    // return Messages.find({ chat: selectedChat });
+    return Messages.find();
   });
 }
