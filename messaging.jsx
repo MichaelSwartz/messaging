@@ -46,7 +46,7 @@ var Chatlist = ReactMeteor.createClass({
     if (this.state.selectedChat) {
       children.push(
         <div className="info">
-          <div className="name">{this.state.selectedName}</div>
+          <div className="name"><h3>{this.state.selectedName}</h3></div>
         </div>
       );
     } else {
@@ -72,7 +72,8 @@ var Messagelist = ReactMeteor.createClass({
   templateName: "Messagelist",
 
   startMeteorSubscriptions: function() {
-    Meteor.subscribe("messages");
+    Meteor.subscribe("messages", Session.get("selected_chat"));
+    // Tracker.autorun(function () {});
   },
 
   getMeteorState: function() {
@@ -123,10 +124,8 @@ if (Meteor.isServer) {
     return Chats.find();
   });
 
-  Meteor.publish("messages", function () {
-    //var user = Meteor.users.findOne(this.userId);
-    //var selectedChat = user.profile.selectedChat;
-    // return Messages.find({ chat: selectedChat });
-    return Messages.find();
+  Meteor.publish("messages", function (chat) {
+    // var selectedChat = Meteor.users.findOne(this.userId).profile.selectedChat;
+    return Messages.find({ chat: chat });
   });
 }
