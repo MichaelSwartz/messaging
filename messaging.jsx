@@ -86,6 +86,8 @@ var Messagelist = ReactMeteor.createClass({
     return <Message
       key={model._id}
       text={model.text}
+      username={model.username}
+      time={moment(model.createdAt).fromNow()}
     />;
   },
 
@@ -102,8 +104,9 @@ var Messagelist = ReactMeteor.createClass({
 
 var Message = React.createClass({
   render: function() {
-    var {text, ...rest } = this.props;
+    var {text, username, time, ...rest } = this.props;
     return <div {...rest} className={cx("message", rest.className)}>
+      <h5 className="username">{username} - {time}</h5>
       <span className="text">{text}</span>
     </div>;
   }
