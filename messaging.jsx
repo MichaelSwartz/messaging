@@ -49,7 +49,7 @@ var Chatlist = ReactMeteor.createClass({
       );
     } else {
       children.push(
-        <div className="none">Select a chat</div>
+        <div className="none"><h3>Select a chat</h3></div>
       );
     }
 
@@ -106,9 +106,9 @@ var Message = ReactMeteor.createClass({
   render: function() {
     var {text, username, time, ...rest } = this.props;
     return <div {...rest} className={cx("message", rest.className)}>
-      <h5 className="username">{username} - {time}</h5>
+      <strong className="username">{username}</strong> - {time}
+      <br />&nbsp;&nbsp;&nbsp;
       <span className="text">{text}</span>
-      <button class="delete">&times;</button>
     </div>;
   }
 });
@@ -137,12 +137,6 @@ if (Meteor.isClient) {
       return false;
     }
   });
-
-  Template.message.events({
-    "click .delete": function () {
-      Meteor.call("deleteMessage", this._id);
-    }
-  });
 }
 
 if (Meteor.isServer) {
@@ -152,7 +146,6 @@ if (Meteor.isServer) {
 
   Meteor.publish("messages", function (chat) {
     return Messages.find({ chat: chat });
-    // return Messages.find();
   });
 }
 
@@ -174,21 +167,14 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized");
     }
 
-    Messages.insert({
-      text: text,
-      createdAt: new Date(),
-      author: Meteor.userId(),
-      username: Meteor.user().username || Meteor.user().profile.name,
-      chat: chat
-    });
-  },
-
-  deleteMessage: function (messageId) {
-    var message = Messages.findOne(messageId);
-    if (message.author !== Meteor.userId()) {
-      throw new Meteor.Error("not-authorized");
+    if (!!text && !!chat) {
+      Messages.insert({
+        text: text,
+        createdAt: new Date(),
+        author: Meteor.userId(),
+        username: Meteor.user().username || Meteor.user().profile.name,
+        chat: chat
+      });
     }
-
-    Messages.remove(messageId);
-  }
+  },
 });
