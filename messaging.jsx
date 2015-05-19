@@ -21,8 +21,6 @@ var Chatlist = ReactMeteor.createClass({
 
   selectChat: function(chat_id) {
     Session.set("selected_chat", chat_id);
-    var user = Meteor.userId();
-    Meteor.users.update({_id: user}, {$set: {'profile.selectedChat': chat_id}});
   },
 
   renderChat: function(model) {
@@ -59,7 +57,7 @@ var Chatlist = ReactMeteor.createClass({
   }
 });
 
-var Chat = React.createClass({
+var Chat = ReactMeteor.createClass({
   render: function() {
     var {name, ...rest } = this.props;
     return <div {...rest} className={cx("chat", rest.className)}>
@@ -68,16 +66,50 @@ var Chat = React.createClass({
   }
 });
 
+var Messageform = ReactMeteor.createClass({
+  templateName: "Messageform",
+
+  addMessage: function(event) {
+    event.preventDefault();
+
+    // var text = React.findDOMNode(this.refs.text).value.trim();
+    var text = event.target.text.value;
+    var chat = Session.get("selectedChat");
+
+    if (!text || !chat) {
+      return;
+      React.findDOMNode(this.refs.text).value = 'Nope';
+    }
+
+    Meteor.call("addMessage", text, chat);
+
+    React.findDOMNode(this.refs.text).value = '';
+    return;
+  },
+
+  render: function() {
+    var selectedChat = Chats.findOne(Session.get("selected_chat"));
+
+    return <form className="newMessage" onSubmit={this.addMessage}>
+      <input type="text" name="text" placeholder="Write messages here!" />
+      <input type="submit" value="Send" />
+    </form>;
+
+    //return <form className="form new-message" onSubmit={addMessage(text, selectedChat)}>
+    //  <input type="text" name="text" placeholder="Write messages here!" />
+    //</form>;
+  }
+})
+
 var Messagelist = ReactMeteor.createClass({
   templateName: "Messagelist",
 
   startMeteorSubscriptions: function() {
-    Meteor.subscribe("messages", Session.get("selected_chat"));
-    // Tracker.autorun(function () {});
+    selectedChat = Session.get("selected_chat");
+    Meteor.subscribe("messages", selectedChat);
   },
 
   getMeteorState: function() {
-    var selectedChat = Chats.findOne(Session.get("selected_chat"));
     return {
       messages: Messages.find({}, {sort: {createdAt: 1}}).fetch(),
     };
@@ -103,12 +135,20 @@ var Messagelist = ReactMeteor.createClass({
   }
 });
 
-var Message = React.createClass({
+var Message = ReactMeteor.createClass({
+
+  deleteMessage: function(event) {
+    event.preventDefault();
+
+    Meteor.call("deleteMessage", this._id);
+  },
+
   render: function() {
     var {text, username, time, ...rest } = this.props;
     return <div {...rest} className={cx("message", rest.className)}>
       <h5 className="username">{username} - {time}</h5>
       <span className="text">{text}</span>
+      <button class="delete">&times;</button>
     </div>;
   }
 });
@@ -125,7 +165,44 @@ if (Meteor.isServer) {
   });
 
   Meteor.publish("messages", function (chat) {
-    // var selectedChat = Meteor.users.findOne(this.userId).profile.selectedChat;
     return Messages.find({ chat: chat });
+    // return Messages.find();
   });
 }
+
+Meteor.methods({
+  addChat: function (name) {
+    if (! Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Chats.insert({
+      name: name,
+      createdAt: new Date (),
+      owner: Meteor.userId(),
+    });
+  },
+
+  addMessage: function (text, chat) {
+    if (! Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Messages.insert({
+      text: text,
+      createdAt: new Date(),
+      author: Meteor.userId(),
+      username: Meteor.user().username || Meteor.user().profile.name,
+      chat: chat
+    });
+  },
+
+  deleteMessage: function (messageId) {
+    var message = Messages.findOne(messageId);
+    if (message.author !== Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Messages.remove(messageId);
+  }
+});
