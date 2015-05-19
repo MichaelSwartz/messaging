@@ -5,8 +5,19 @@
 <body>
   <div id="outer">
     {{> loginButtons}}
-    {{> Chatlist}}
-    {{> Messageform}}
-    {{> Messagelist}}
+    {{#if currentUser}}
+      <form class="form new-chat">
+        <input type="text" name="text" placeholder="Create new chat here">
+      </form>
+      {{> Chatlist}}
+      <form class="form new-message">
+        <input type="text" name="text" placeholder="Click here to type messages!" />
+      </form>
+      {{> Messagelist}}
+    {{else}}
+      <div class="note">
+        Sign in to create chats and write messages
+      </div>
+    {{/if}}
   </div>
 </body>

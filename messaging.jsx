@@ -66,41 +66,6 @@ var Chat = ReactMeteor.createClass({
   }
 });
 
-var Messageform = ReactMeteor.createClass({
-  templateName: "Messageform",
-
-  addMessage: function(event) {
-    event.preventDefault();
-
-    // var text = React.findDOMNode(this.refs.text).value.trim();
-    var text = event.target.text.value;
-    var chat = Session.get("selectedChat");
-
-    if (!text || !chat) {
-      return;
-      React.findDOMNode(this.refs.text).value = 'Nope';
-    }
-
-    Meteor.call("addMessage", text, chat);
-
-    React.findDOMNode(this.refs.text).value = '';
-    return;
-  },
-
-  render: function() {
-    var selectedChat = Chats.findOne(Session.get("selected_chat"));
-
-    return <form className="newMessage" onSubmit={this.addMessage}>
-      <input type="text" name="text" placeholder="Write messages here!" />
-      <input type="submit" value="Send" />
-    </form>;
-
-    //return <form className="form new-message" onSubmit={addMessage(text, selectedChat)}>
-    //  <input type="text" name="text" placeholder="Write messages here!" />
-    //</form>;
-  }
-})
-
 var Messagelist = ReactMeteor.createClass({
   templateName: "Messagelist",
 
@@ -111,7 +76,7 @@ var Messagelist = ReactMeteor.createClass({
 
   getMeteorState: function() {
     return {
-      messages: Messages.find({}, {sort: {createdAt: 1}}).fetch(),
+      messages: Messages.find({}, {sort: {createdAt: -1}}).fetch(),
     };
   },
 
@@ -136,12 +101,7 @@ var Messagelist = ReactMeteor.createClass({
 });
 
 var Message = ReactMeteor.createClass({
-
-  deleteMessage: function(event) {
-    event.preventDefault();
-
-    Meteor.call("deleteMessage", this._id);
-  },
+  templateName: "Message",
 
   render: function() {
     var {text, username, time, ...rest } = this.props;
@@ -156,6 +116,32 @@ var Message = ReactMeteor.createClass({
 if (Meteor.isClient) {
   Accounts.ui.config({
     passwordSignupFields: "USERNAME_ONLY"
+  });
+
+  Template.body.events({
+    "submit .new-message": function (event) {
+      var text = event.target.text.value;
+      var chat = Session.get("selectedChat");
+
+      Meteor.call("addMessage", text, chat);
+
+      event.target.text.value = "";
+      return false;
+    },
+
+    "submit .new-chat": function (event) {
+      var name = event.target.text.value;
+      Meteor.call("addChat", name);
+
+      event.target.text.value = "";
+      return false;
+    }
+  });
+
+  Template.message.events({
+    "click .delete": function () {
+      Meteor.call("deleteMessage", this._id);
+    }
   });
 }
 
